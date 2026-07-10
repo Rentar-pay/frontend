@@ -1,5 +1,5 @@
 "use client"
-import { createContext, useContext, useState, ReactNode } from "react"
+import { createContext, useContext, useState, ReactNode, useEffect } from "react"
 import { connectFreighter, signWithFreighter, isFreighterInstalled } from "@/lib/wallet/freighter"
 import { walletConnectService } from "@/lib/wallet/walletconnect"
 import { useAuth } from "./auth-context"
@@ -25,6 +25,23 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const [walletType, setWalletType] = useState<WalletType>(null)
   const [isConnecting, setIsConnecting] = useState(false)
   const { login, getChallengeForKey, logout } = useAuth()
+
+  // Restore WalletConnect session on mount
+  useEffect(() => {
+    const restoreWCSession = async () => {
+      try {
+        const session = await walletConnectService.restoreSession()
+        if (session) {
+          setPublicKey(session.publicKey)
+          setWalletType("walletconnect")
+        }
+      } catch (error) {
+        console.warn("Failed to restore WalletConnect session:", error)
+      }
+    }
+
+    restoreWCSession()
+  }, [])
 
   const handleSep10Login = async (pk: string, signer: (msg: string) => Promise<string>) => {
     const challenge = await getChallengeForKey(pk)
