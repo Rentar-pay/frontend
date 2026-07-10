@@ -98,7 +98,7 @@ src/
     shared/ (skeletons)
     providers.tsx (QueryClient + Theme + Auth + Wallet + Toaster)
   contexts/
-    auth-context.tsx (SEP-10 login, localStorage JWT, mock fallback)
+    auth-context.tsx (SEP-10 login, localStorage JWT, opt-in demo mode)
     wallet-context.tsx (Freighter + WC, signMessage abstraction)
   lib/
     api/client.ts, services.ts
@@ -124,8 +124,16 @@ src/
 
 ### Testing
 
-- Component tests: `src/components/__tests__/button.test.tsx` (Vitest + Testing Library)
-- Playwright e2e: `tests/e2e/rentar.spec.ts` covers landing, auth, dashboard flows
+Unit tests use **Vitest + Testing Library** (`npm test`):
+
+- `src/components/__tests__/button.test.tsx` — Button component (3 tests)
+- `src/components/__tests__/card.test.tsx` — Card component (1 test)
+- `src/contexts/__tests__/auth-context.test.tsx` — Auth context: login error propagation, demo mode, session rehydration (12 tests)
+- `src/contexts/__tests__/wallet-context.test.tsx` — Wallet context: connect flows, toast feedback, error reset (10 tests)
+
+E2E tests use **Playwright** (`npx playwright test`):
+
+- `tests/e2e/rentar.spec.ts` — landing, auth, dashboard redirect flows
 
 ### Storybook
 
