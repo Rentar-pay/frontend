@@ -9,11 +9,15 @@ import { Bell, Search, Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 import Link from "next/link"
 import { DashboardSkeleton } from "@/components/shared/skeletons"
+import { useNotifications } from "@/hooks/use-notifications"
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth()
   const router = useRouter()
   const { theme, setTheme } = useTheme()
+  const { data: notifications } = useNotifications()
+  
+  const unreadCount = notifications?.filter(n => !n.read).length ?? 0
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) router.push("/auth")
@@ -36,7 +40,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <Sun className="h-4 w-4 rotate-0 scale-100 dark:-rotate-90 dark:scale-0" />
               <Moon className="absolute h-4 w-4 rotate-90 scale-0 dark:rotate-0 dark:scale-100" />
             </Button>
-            <Link href="/dashboard/notifications"><Button variant="ghost" size="icon" className="relative"><Bell className="h-4 w-4" /><span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500" /></Button></Link>
+            <Link href="/dashboard/notifications"><Button variant="ghost" size="icon" className="relative"><Bell className="h-4 w-4" />{unreadCount > 0 && <span className="absolute top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white text-xs font-semibold">{unreadCount > 9 ? '9+' : unreadCount}</span>}</Button></Link>
           </div>
         </header>
         <main className="flex-1 p-4 lg:p-8 pb-24 lg:pb-8">{children}</main>
