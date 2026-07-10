@@ -1,5 +1,5 @@
 "use client"
-import { createContext, useContext, useEffect, useState, ReactNode } from "react"
+import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react"
 import { authService } from "@/lib/api/services"
 import type { UserProfile } from "@/lib/api/client"
 import { buildSep10Challenge } from "@/lib/wallet/stellar"
@@ -54,6 +54,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [publicKey, setPublicKey] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
+  // ---------------------------------------------------------------------------
+  // logout — defined before useEffect so it can be referenced inside it
+  // ---------------------------------------------------------------------------
+  const logout = useCallback(() => {
+    setToken(null)
+    setUser(null)
+    setPublicKey(null)
+    localStorage.removeItem("rentar_token")
+    localStorage.removeItem("rentar_publicKey")
+    localStorage.removeItem("rentar_user")
+  }, [])
+
   // Rehydrate session from localStorage on mount.
   useEffect(() => {
     const storedToken = localStorage.getItem("rentar_token")
@@ -61,6 +73,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const storedUser = localStorage.getItem("rentar_user")
 
     if (storedToken && storedKey) {
+      // Session rehydration on mount is intentional — this effect runs once on
+      // hydration and initialises state from localStorage before the first render.
+      // The custom set-state-in-effect rule is suppressed here because this is the
+      // canonical pattern for an auth provider; there is no external subscription.
+      /* eslint-disable react-hooks/set-state-in-effect */
       setToken(storedToken)
       setPublicKey(storedKey)
       if (storedUser) {
@@ -71,6 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           logout()
         }
       }
+      /* eslint-enable react-hooks/set-state-in-effect */
 
       // Validate the stored token against the backend (skip in demo mode).
       if (isDemoMode) {
@@ -89,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } else {
       setIsLoading(false)
     }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [logout])
 
   // ---------------------------------------------------------------------------
   // getChallengeForKey
@@ -134,18 +152,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("rentar_token", res.token)
     localStorage.setItem("rentar_publicKey", pk)
     localStorage.setItem("rentar_user", JSON.stringify(res.user))
-  }
-
-  // ---------------------------------------------------------------------------
-  // logout
-  // ---------------------------------------------------------------------------
-  const logout = () => {
-    setToken(null)
-    setUser(null)
-    setPublicKey(null)
-    localStorage.removeItem("rentar_token")
-    localStorage.removeItem("rentar_publicKey")
-    localStorage.removeItem("rentar_user")
   }
 
   return (
