@@ -24,31 +24,27 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const [publicKey, setPublicKey] = useState<string | null>(null)
   const [walletType, setWalletType] = useState<WalletType>(null)
   const [isConnecting, setIsConnecting] = useState(false)
-  const { login, getChallengeForKey, logout } = useAuth()
+  const { login, getChallengeForKey, logout, isDemoMode } = useAuth()
 
-  // Restore WalletConnect session on mount
-  useEffect(() => {
-    const restoreWCSession = async () => {
-      try {
-        const session = await walletConnectService.restoreSession()
-        if (session) {
-          setPublicKey(session.publicKey)
-          setWalletType("walletconnect")
-        }
-      } catch (error) {
-        console.warn("Failed to restore WalletConnect session:", error)
-      }
-    }
-
-    restoreWCSession()
-  }, [])
-
-  const handleSep10Login = async (pk: string, signer: (msg: string) => Promise<string>) => {
+  // ---------------------------------------------------------------------------
+  // handleSep10Login
+  //
+  // Performs the full SEP-10 challenge/response flow and calls auth login.
+  // Any error thrown here is intentional — callers display a toast and halt.
+  // ---------------------------------------------------------------------------
+  const handleSep10Login = async (
+    pk: string,
+    signer: (msg: string) => Promise<string>
+  ) => {
     const challenge = await getChallengeForKey(pk)
     const signed = await signer(challenge)
+    // login() propagates errors in real mode; callers handle display.
     await login(pk, signed)
   }
 
+  // ---------------------------------------------------------------------------
+  // connectFreighterWallet
+  // ---------------------------------------------------------------------------
   const connectFreighterWallet = async () => {
     setIsConnecting(true)
     try {
@@ -56,15 +52,27 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       setPublicKey(pk)
       setWalletType("freighter")
       await handleSep10Login(pk, signWithFreighter)
-      toast.success("Connected with Freighter")
-    } catch (e: any) {
-      toast.error(e.message || "Failed to connect Freighter")
+      toast.success(
+        isDemoMode
+          ? "Connected with Freighter (demo mode)"
+          : "Connected with Freighter"
+      )
+    } catch (e: unknown) {
+      // Reset wallet state so the user can retry cleanly.
+      setPublicKey(null)
+      setWalletType(null)
+      const message = e instanceof Error ? e.message : "Failed to connect Freighter"
+      toast.error(`Authentication failed: ${message}`)
+      // Re-throw so the auth page can set its own error state.
       throw e
     } finally {
       setIsConnecting(false)
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // connectWC
+  // ---------------------------------------------------------------------------
   const connectWC = async () => {
     setIsConnecting(true)
     try {
@@ -72,21 +80,36 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       setPublicKey(session.publicKey)
       setWalletType("walletconnect")
       await handleSep10Login(session.publicKey, walletConnectService.signMessage)
-      toast.success("Connected with WalletConnect")
-    } catch (e: any) {
-      toast.error(e.message || "Failed to connect via WalletConnect")
+      toast.success(
+        isDemoMode
+          ? "Connected with WalletConnect (demo mode)"
+          : "Connected with WalletConnect"
+      )
+    } catch (e: unknown) {
+      // Reset wallet state so the user can retry cleanly.
+      setPublicKey(null)
+      setWalletType(null)
+      const message = e instanceof Error ? e.message : "Failed to connect via WalletConnect"
+      toast.error(`Authentication failed: ${message}`)
+      // Re-throw so the auth page can set its own error state.
       throw e
     } finally {
       setIsConnecting(false)
     }
   }
 
-  const signMessage = async (message: string) => {
+  // ---------------------------------------------------------------------------
+  // signMessage — delegates to the active wallet
+  // ---------------------------------------------------------------------------
+  const signMessage = async (message: string): Promise<string> => {
     if (walletType === "freighter") return signWithFreighter(message)
     if (walletType === "walletconnect") return walletConnectService.signMessage(message)
     throw new Error("No wallet connected")
   }
 
+  // ---------------------------------------------------------------------------
+  // disconnect
+  // ---------------------------------------------------------------------------
   const disconnect = () => {
     if (walletType === "walletconnect") walletConnectService.disconnect()
     setPublicKey(null)
@@ -96,16 +119,18 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <WalletContext.Provider value={{
-      publicKey,
-      walletType,
-      isConnecting,
-      isFreighterAvailable: isFreighterInstalled(),
-      connectFreighter: connectFreighterWallet,
-      connectWalletConnect: connectWC,
-      signMessage,
-      disconnect
-    }}>
+    <WalletContext.Provider
+      value={{
+        publicKey,
+        walletType,
+        isConnecting,
+        isFreighterAvailable: isFreighterInstalled(),
+        connectFreighter: connectFreighterWallet,
+        connectWalletConnect: connectWC,
+        signMessage,
+        disconnect,
+      }}
+    >
       {children}
     </WalletContext.Provider>
   )

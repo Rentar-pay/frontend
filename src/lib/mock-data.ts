@@ -1,3 +1,19 @@
+// ---------------------------------------------------------------------------
+// Demo mode flag — mirrors the value read by auth-context.tsx.
+// Import this in components that need to gate demo-only UI.
+// ---------------------------------------------------------------------------
+export const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE?.toLowerCase() === "true"
+
+// Synthetic demo user profile — used by mock API routes and tests.
+export const mockDemoUser = {
+  id: "user_demo",
+  publicKey: "GDEMO000000000000000000000000000000000000000000000000000",
+  displayName: "Demo User",
+  email: "demo@rentar.demo",
+  createdAt: new Date(0).toISOString(),
+  kycStatus: "verified" as const,
+}
+
 export const mockSavingsGoals = [
   {
     id: "goal_1",
