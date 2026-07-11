@@ -1,5 +1,5 @@
 "use client"
-import { createContext, useContext, useState, ReactNode } from "react"
+import { createContext, useContext, useState, ReactNode, useEffect } from "react"
 import { connectFreighter, signWithFreighter, isFreighterInstalled } from "@/lib/wallet/freighter"
 import { walletConnectService } from "@/lib/wallet/walletconnect"
 import { useAuth } from "./auth-context"

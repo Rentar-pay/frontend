@@ -21,6 +21,8 @@
     "@stellar/freighter-api": "^6.0.1",
     "@stellar/stellar-sdk": "^16.0.1",
     "@tanstack/react-query": "^5.101.2",
+    "@walletconnect/modal": "^2.6.2",
+    "@walletconnect/sign-client": "^2.13.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
