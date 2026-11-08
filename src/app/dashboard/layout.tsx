@@ -9,6 +9,7 @@ import { Bell, Search, Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 import Link from "next/link"
 import { DashboardSkeleton } from "@/components/shared/skeletons"
+import { DashboardErrorBoundary } from "@/components/shared/error-boundary"
 import { useNotifications } from "@/hooks/use-notifications"
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -43,7 +44,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <Link href="/dashboard/notifications"><Button variant="ghost" size="icon" className="relative"><Bell className="h-4 w-4" />{unreadCount > 0 && <span className="absolute top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white text-xs font-semibold">{unreadCount > 9 ? '9+' : unreadCount}</span>}</Button></Link>
           </div>
         </header>
-        <main className="flex-1 p-4 lg:p-8 pb-24 lg:pb-8">{children}</main>
+        <main className="flex-1 p-4 lg:p-8 pb-24 lg:pb-8">
+          <DashboardErrorBoundary>
+            {children}
+          </DashboardErrorBoundary>
+        </main>
         <MobileNav />
       </div>
     </div>

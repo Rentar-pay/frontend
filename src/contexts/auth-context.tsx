@@ -16,7 +16,12 @@ export const isDemoMode =
 
 /** Build a deterministic mock session for demo/offline development. */
 function buildDemoSession(pk: string, signedMessage: string) {
-  const mockToken = btoa(`demo:${pk}:${signedMessage}:${Date.now()}`)
+  const isAdmin = Boolean(
+    pk.toLowerCase().includes("admin") ||
+    signedMessage.toLowerCase().includes("admin") ||
+    process.env.NEXT_PUBLIC_DEMO_ADMIN === "true"
+  )
+  const mockToken = btoa(`demo:${pk}:${signedMessage}:${Date.now()}${isAdmin ? ":admin" : ""}`)
   const mockUser: UserProfile = {
     id: `user_${pk.slice(0, 8)}`,
     publicKey: pk,
@@ -24,6 +29,7 @@ function buildDemoSession(pk: string, signedMessage: string) {
     email: `${pk.slice(0, 8).toLowerCase()}@rentar.demo`,
     createdAt: new Date().toISOString(),
     kycStatus: "verified",
+    isAdmin,
   }
   return { token: mockToken, user: mockUser }
 }

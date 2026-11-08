@@ -171,4 +171,5 @@ export interface UserProfile {
   avatar?: string;
   createdAt: string;
   kycStatus: "pending" | "verified" | "unverified";
+  isAdmin?: boolean;
 }

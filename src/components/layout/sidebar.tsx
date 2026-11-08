@@ -68,12 +68,14 @@ export function Sidebar() {
         </nav>
         <Separator className="my-4" />
         <nav className="grid gap-1 px-3">
-          {bottomItems.map((item) => (
-            <Link key={item.href} href={item.href} className={cn("flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors", pathname === item.href ? "bg-muted font-medium" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
-              <item.icon className="h-4 w-4" />
-              {item.label}
-            </Link>
-          ))}
+          {bottomItems
+            .filter((item) => !item.adminOnly || Boolean(user?.isAdmin))
+            .map((item) => (
+              <Link key={item.href} href={item.href} className={cn("flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors", pathname === item.href ? "bg-muted font-medium" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
+                <item.icon className="h-4 w-4" />
+                {item.label}
+              </Link>
+            ))}
         </nav>
       </div>
       <div className="border-t p-4">
