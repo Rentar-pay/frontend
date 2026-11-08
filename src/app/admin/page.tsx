@@ -1,4 +1,7 @@
 "use client"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/contexts/auth-context"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -11,10 +14,27 @@ import Link from "next/link"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function AdminPage() {
-  const { data: stats, isLoading: statsLoading } = useQuery({ queryKey: ["admin-stats"], queryFn: adminService.getStats })
-  const { data: users, isLoading: usersLoading } = useQuery({ queryKey: ["admin-users"], queryFn: adminService.getUsers })
+  const router = useRouter()
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth()
+  const { data: stats, isLoading: statsLoading } = useQuery({
+    queryKey: ["admin-stats"],
+    queryFn: adminService.getStats,
+    enabled: Boolean(user?.isAdmin)
+  })
+  const { data: users, isLoading: usersLoading } = useQuery({
+    queryKey: ["admin-users"],
+    queryFn: adminService.getUsers,
+    enabled: Boolean(user?.isAdmin)
+  })
 
-  if (statsLoading) return <Skeleton className="h-32" />
+  useEffect(() => {
+    if (!authLoading && (!isAuthenticated || !user?.isAdmin)) {
+      router.replace("/dashboard")
+    }
+  }, [authLoading, isAuthenticated, user, router])
+
+  if (authLoading || (user?.isAdmin && statsLoading)) return <Skeleton className="h-32" />
+  if (!isAuthenticated || !user?.isAdmin) return null
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">

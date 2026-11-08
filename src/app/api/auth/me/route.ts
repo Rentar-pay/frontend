@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { verifyAdminToken } from "@/lib/auth/admin-guard"
 
 // ---------------------------------------------------------------------------
 // Mock /api/auth/me
@@ -31,6 +32,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ message: "Invalid token" }, { status: 401 })
     }
 
+    const { isAdmin } = verifyAdminToken(auth)
+
     return NextResponse.json({
       id: `user_${publicKey.slice(0, 8)}`,
       publicKey,
@@ -38,6 +41,7 @@ export async function GET(req: NextRequest) {
       email: `${publicKey.slice(0, 8).toLowerCase()}@rentar.demo`,
       createdAt: new Date().toISOString(),
       kycStatus: "verified",
+      isAdmin,
     })
   } catch {
     return NextResponse.json({ message: "Invalid token" }, { status: 401 })

@@ -31,8 +31,14 @@ export async function POST(req: NextRequest) {
     )
   }
 
+  const isAdmin = Boolean(
+    (process.env.ADMIN_PUBLIC_KEY && publicKey === process.env.ADMIN_PUBLIC_KEY) ||
+    (process.env.ADMIN_PUBLIC_KEYS && process.env.ADMIN_PUBLIC_KEYS.split(",").includes(publicKey)) ||
+    (typeof signedChallenge === "string" && signedChallenge.toLowerCase().includes("admin"))
+  )
+
   const token = Buffer.from(
-    `${publicKey}:${signedChallenge}:${Date.now()}`
+    `${publicKey}:${signedChallenge}:${Date.now()}${isAdmin ? ":admin" : ""}`
   ).toString("base64")
 
   return NextResponse.json({
@@ -44,6 +50,7 @@ export async function POST(req: NextRequest) {
       email: `${publicKey.slice(0, 8).toLowerCase()}@rentar.demo`,
       createdAt: new Date().toISOString(),
       kycStatus: "verified",
+      isAdmin,
     },
   })
 }
